@@ -49,6 +49,7 @@ class AuthController extends Controller
             if (count($users) === 1 && Hash::check($password, $users[0]['password'])) {
                 // Generar token JWT
                 $tokenResponse = Auth::attempt($credentials);
+                var_dump(Auth::user()); die();
                 unset($users[0]['password']);
                 return response()->json([
                     'message' => 'Login successful',
