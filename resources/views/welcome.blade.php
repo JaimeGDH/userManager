@@ -28,36 +28,31 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <div class="card">
-                            <div class="card-header">
-                                @auth
-                                    Users
-                                @else
-                                    Login
-                                @endauth
+                            <div id="login-container" class="card-body">                                
+                                <form id="login-form">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="password" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="password" name="password" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Login</button>
+                                </form>                                
                             </div>
-                            <div class="card-body">
-                                @auth
-                                    <!-- Aquí muestra la tabla con los datos de los usuarios -->
-                                @else
-                                    <form id="login-form">
-                                        <div class="mb-3">
-                                            <label for="email" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" name="email" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="password" class="form-label">Password</label>
-                                            <input type="password" class="form-control" id="password" name="password" required>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary">Login</button>
-                                    </form>
-                                @endauth
-                            </div>
-                            <div class="card-footer">
-                                @auth
-                                    <!-- No se necesita el enlace de registro cuando el usuario está autenticado -->
-                                @else
-                                    <p class="mb-0">Don't have an account? <a href="#">Register</a></p>
-                                @endauth
+                            <div class="logged-in-content" style="display: none;">
+                                <table class="user-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Las filas de usuarios se agregarán aquí dinámicamente -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -65,34 +60,95 @@
             </div>
         </main>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const loginForm = document.querySelector('#login-form');
+    <!-- ... (encabezado y contenido) ... -->
 
-            loginForm.addEventListener('submit', async function (event) {
-                event.preventDefault();
-
-                const formData = new FormData(loginForm);
-
-                try {
-                    const response = await fetch('/api/login', {
-                        method: 'POST',
-                        body: formData,
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        localStorage.setItem('access_token', data.access_token);
-                        console.log('Login successful', data);
-                    } else {
-                        console.error('Login failed', data);
+<script>
+        // Función para cargar la lista de usuarios y verificar el token
+        function checkTokenAndLoadUserList() {
+            const loginContainer = document.querySelector('#login-container');
+            const loggedInContent = document.querySelector('.logged-in-content');
+            const userTable = document.querySelector('.user-table tbody');
+            
+            // Obtener el token de acceso almacenado en localStorage
+            const accessToken = localStorage.getItem('access_token');
+            
+            if (accessToken) {
+                // Intentar cargar la lista de usuarios
+                fetch('/api/list', {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Accept': 'application/json'
                     }
-                } catch (error) {
-                    console.error('An error occurred', error);
-                }
+                })
+                .then(response => {
+                    if (response.ok) {                        
+                        // Token válido, mostrar contenido
+                        loginContainer.style.display = 'none';
+                        loggedInContent.style.display = 'block';
+
+                        return response.json();
+                    } else {
+                        // Token no válido, borrar token y mostrar formulario de inicio de sesión                        
+                        localStorage.removeItem('access_token');
+                        loggedInContent.style.display = 'none';
+                        loginContainer.style.display = 'block';
+                    }
+                })
+                .then(data => {
+                    // Agregar usuarios a la tabla
+                    data.forEach(user => {
+                        const row = userTable.insertRow();
+                        const nameCell = row.insertCell(0);
+                        const emailCell = row.insertCell(1);
+
+                        nameCell.textContent = user.name;
+                        emailCell.textContent = user.email;
+                    });
+                })
+                .catch(error => {
+                    console.error('An error occurred while fetching user list', error);
+                });
+            } else {
+                // No hay token, mostrar formulario de inicio de sesión
+                loggedInContent.style.display = 'none';
+                loginContainer.style.display = 'block';
+            }
+        }
+
+        // Función para manejar el envío del formulario de inicio de sesión
+        document.querySelector('#login-form').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            
+            const email = document.querySelector('#email').value;
+            const password = document.querySelector('#password').value;
+
+            // Realizar solicitud POST para iniciar sesión
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
             });
+
+            if (response.ok) {
+                // Inicio de sesión exitoso, guardar token en localStorage y cargar lista de usuarios
+                const data = await response.json();
+                localStorage.setItem('access_token', data.access_token);
+                checkTokenAndLoadUserList();
+            } else {
+                // Inicio de sesión fallido, mostrar mensaje de error
+                console.error('Login failed');
+            }
         });
+
+        document.addEventListener('DOMContentLoaded', checkTokenAndLoadUserList);
     </script>
+
+
 </body>
 </html>
