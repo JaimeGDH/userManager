@@ -15,7 +15,7 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'new']]);
+        $this->middleware('auth:api', ['except' => ['login', 'new', 'me']]);
     }
 
     private function isEmailUniqueInExternalAPI($email)
@@ -142,7 +142,7 @@ class AuthController extends Controller
     public function me(Request $request, $id)
     {
         // Obtener el usuario autenticado
-        $authenticatedUser = auth()->user();
+        $authenticatedUser = JWTAuth::parseToken()->authenticate();
         
         // Verificar si el usuario autenticado coincide con el ID proporcionado en la URL
         if ($authenticatedUser->id != $id) {
