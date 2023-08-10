@@ -36,4 +36,11 @@ userManager/app/Http/Controllers/API/AuthController.php
 # Vista que utiliza la API
 userManager/resources/views/welcome.blade.php
 
+## Tecnologías
+
+PHP 8.1.2
+
+Laravel 10
+
+Para generación de JWT se utilizó: php-open-source-saver/jwt-auth": "^2.1
 
