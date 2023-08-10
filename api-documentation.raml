@@ -1,0 +1,93 @@
+#%RAML 1.0
+title: User API
+version: v1
+
+baseUri: http://127.0.0.1:8000/api/
+
+types:
+  User:
+    type: object
+    properties:
+      id: integer
+      name: string
+      email: string
+    example:
+      id: 1
+      name: John Doe
+      email: john@example.com
+
+/auth:
+  /login:
+    post:
+      description: Log in with email and password
+      body:
+        application/json:
+          properties:
+            email: string
+            password: string
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                message: Login successful
+                user: !include types/User.raml
+                access_token: eyJ0eXAi...
+
+/users:
+  /:
+    get:
+      description: Get a list of users
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                - !include types/User.raml
+                - !include types/User.raml
+
+  /{userId}:
+    get:
+      description: Get user by ID
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include types/User.raml
+      uriParameters:
+        userId:
+          description: ID of the user
+          type: integer
+          required: true
+
+    patch:
+      description: Update user information
+      body:
+        application/json:
+          example:
+            name: John Doe
+            email: john@example.com
+            password: newpassword
+      responses:
+        200:
+          body:
+            application/json:
+              example: { message: User information updated successfully }
+      uriParameters:
+        userId:
+          description: ID of the user
+          type: integer
+          required: true
+
+    delete:
+      description: Delete user by ID
+      responses:
+        200:
+          body:
+            application/json:
+              example: { message: User account deleted successfully }
+      uriParameters:
+        userId:
+          description: ID of the user
+          type: integer
+          required: true
