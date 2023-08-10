@@ -159,11 +159,6 @@ class AuthController extends Controller
         // Obtener el valor del email del request
         $email = $request->email;
 
-        // Verificar la unicidad del correo electrónico en la API externa
-        if (!$this->isEmailUniqueInExternalAPI($email)) {
-            return response()->json(['message' => 'Email already registered in external API'], 400);
-        }
-
         // Construir los datos actualizados
         $updatedData = [
             'name' => $request->name,

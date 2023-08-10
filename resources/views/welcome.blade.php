@@ -38,14 +38,22 @@
                             <div class="mb-3">
                                 <label for="edit-name" class="form-label">Nombre</label>
                                 <input type="text" class="form-control" id="edit-name" name="edit-name" required>
-                            </div>
+                                <div class="text-danger" id="edit-name-error"></div>
+                            </div>                            
                             <div class="mb-3">
                                 <label for="edit-email" class="form-label">Email</label>
                                 <input type="email" class="form-control" id="edit-email" name="edit-email" required>
+                                <div class="text-danger" id="edit-email-error"></div>
                             </div>
                             <div class="mb-3">
                                 <label for="edit-password" class="form-label">Contraseña</label>
                                 <input type="password" class="form-control" id="edit-password" name="edit-password" required>
+                                <div class="text-danger" id="edit-password-error"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password_confirmation" class="form-label">Confirmar Contraseña</label>
+                                <input type="password" class="form-control" id="password-confirmation" name="password-confirmation" required>
+                                <div class="text-danger" id="password-confirmation-error"></div>
                             </div>
                             <input type="hidden" id="edit-user-id" name="edit-user-id">
                         </form>
@@ -74,7 +82,7 @@
                                     <div class="mb-3">
                                         <label for="password" class="form-label">Password</label>
                                         <input type="password" class="form-control" id="password" name="password" required>
-                                    </div>
+                                    </div>                                    
                                     <button type="submit" class="btn btn-primary">Login</button>
                                 </form>                                
                             </div>
@@ -233,6 +241,21 @@
     // Lógica para guardar los cambios al hacer clic en "Guardar Cambios"
     const editSaveBtn = document.getElementById('edit-save-btn');
     editSaveBtn.addEventListener('click', async () => {
+        const editForm = document.getElementById('edit-form');
+        if (!editForm.checkValidity()) {
+            // Mostrar mensajes de validación en campos inválidos
+            const invalidFields = editForm.querySelectorAll(':invalid');
+            invalidFields.forEach(field => {
+                const fieldName = field.getAttribute('name');
+                const errorDiv = document.getElementById(`${fieldName}-error`);
+                if (errorDiv) {
+                    errorDiv.textContent = field.validationMessage;
+                }
+            });
+            
+            return;
+        }
+        
         const editNameInput = document.getElementById('edit-name');
         const editEmailInput = document.getElementById('edit-email');
         const editPasswordInput = document.getElementById('edit-password');
@@ -311,9 +334,9 @@
         return users.find(user => user.id === userId);
     }
 
-    deleteButton.addEventListener('click', () => {
+    // deleteButton.addEventListener('click', () => {
         
-    });
+    // });
     </script>
 </body>
 </html>
