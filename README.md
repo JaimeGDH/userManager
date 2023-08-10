@@ -28,6 +28,11 @@ Ejecutar proyecto
 npm run serve
 ```
 
+## Se puede probar con el siguiente usuario
+
+user: joseperez2@gmail.com
+pass: jose123
+
 ## MockApi
 
 Se utilizó el siguiente proyecto mockApi
