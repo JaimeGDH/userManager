@@ -10,6 +10,14 @@ Instalar repositorios
 composer install
 ```
 
+Generar llave secreta para JWT
+```
+php artisan jwt:secret
+```
+
+Revisar si en el .env se agregó JWT_SECRET=81S... y JWT_ALGO=HS256
+
+
 Compilar proyecto
 ```
 npm run dev
