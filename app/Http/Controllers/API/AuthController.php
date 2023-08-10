@@ -14,22 +14,7 @@ use Illuminate\Support\Arr;
 class AuthController extends Controller
 {
     public function __construct()
-    {
-        $this->middleware('auth:api', ['except' => ['login', 'new', 'me']]);
-    }
-
-    private function isEmailUniqueInExternalAPI($email)
-    {
-        $response = Http::get("https://64d25c51f8d60b174361f0a6.mockapi.io/users?email=$email");
-
-        if ($response->successful()) {
-            $users = $response->json();
-
-            return count($users) === 0;
-        } else {
-            return false;
-        }
-    }
+    {}
 
     public function login(Request $request)
     {
@@ -40,23 +25,25 @@ class AuthController extends Controller
         
         $email = $request->email;
         $password = $request->password;
-        $credentials = $request->only('email', 'password');
 
         // Realizar una solicitud GET hacia mockapi para obtener el hash de contraseña
         $response = Http::get("https://64d25c51f8d60b174361f0a6.mockapi.io/users?email=$email");
 
         if ($response->successful()) {
             $users = $response->json();
-            
+
             if (count($users) === 1 && Hash::check($password, $users[0]['password'])) {
                 // Generar token JWT
-                $tokenResponse = JWTAuth::attempt(['email' => $email, 'password' => $password]);
+                $authenticatedUser = new User();
+                $authenticatedUser->id = $users[0]['id'];
+                $tokenResponse = JWTAuth::fromUser($authenticatedUser);
+
                 unset($users[0]['password']);
                 return response()->json([
                     'message' => 'Login successful',
                     'user' => $users[0],
                     'access_token' => $tokenResponse,
-                ]);
+                ])->header('Authorization', 'Bearer ' . $tokenResponse);
             } else {
                 // Contraseña incorrecta
                 return response()->json([
@@ -111,17 +98,22 @@ class AuthController extends Controller
 
     public function delete($id)
     {
-        $user = User::find($id);
-
-        if (!$user) {
+        $response = Http::get("https://64d25c51f8d60b174361f0a6.mockapi.io/users/$id");
+        
+        if (!$response) {
             return response()->json(['message' => 'User not found'], 404);
         }
+        
+        // Obtener el payload del token
+        $payload = JWTAuth::parseToken()->getPayload();
+
+        // Obtener el ID del usuario
+        $userID = $payload->get('sub');
 
         // Obtener el usuario autenticado
         $authenticatedUser = JWTAuth::parseToken()->authenticate();
-
         // Verificar si el usuario autenticado coincide con el ID proporcionado en la URL
-        if ($authenticatedUser->id != $id) {
+        if ($userID != $id) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
@@ -144,18 +136,20 @@ class AuthController extends Controller
 
     public function me(Request $request, $id)
     {
-        // Obtener el usuario autenticado
-        $authenticatedUser = JWTAuth::parseToken()->authenticate();
+        // Verificar si el usuario autenticado coincide con el ID proporcionado en la URL        
+        $payload = JWTAuth::parseToken()->getPayload();
+
+        // Obtener el ID del usuario
+        $userID = $payload->get('sub');
         
-        // Verificar si el usuario autenticado coincide con el ID proporcionado en la URL
-        if ($authenticatedUser->id != $id) {
+        if ($userID != $id) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
         
         // Validar los datos proporcionados en la solicitud
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $authenticatedUser->id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $request->id,
             'password' => 'required|string|min:6',
         ]);
 
@@ -191,7 +185,7 @@ class AuthController extends Controller
             $users = collect($response->json())->map(function ($user) {
                 return Arr::except($user, ['password']);
             });
-
+            
             return response()->json($users);
         } else {
             return response()->json(['message' => 'Failed to get users information'], 500);

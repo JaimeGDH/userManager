@@ -16,11 +16,8 @@ use App\Http\Controllers\API\AuthController;
 */
 
 Route::post('login', [AuthController::class, 'login']);
+Route::get('list', [AuthController::class, 'list']);
 Route::post('new', [AuthController::class, 'new']);
 Route::post('logout', [AuthController::class, 'logout']);
-Route::get('list', [AuthController::class, 'list']);
-
-Route::middleware('auth:api')->group(function () {
-    Route::patch('me/{id}', [AuthController::class, 'me']);
-    Route::delete('delete/{id}', [AuthController::class, 'delete']);
-});
+Route::patch('me/{id}', [AuthController::class, 'me']);
+Route::delete('delete/{id}', [AuthController::class, 'delete']);

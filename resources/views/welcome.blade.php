@@ -26,7 +26,7 @@
 </head>
 <body>
     <div id="app"> 
-        <button id="logout-button" class="btn btn-secondary btn-logout" style="position: absolute; top: 10px; right: 10px;" style="display: none;">Logout</button>
+        <button id="logout-button" class="btn btn-secondary btn-logged" style="position: absolute; top: 10px; right: 10px;" style="display: none;">Logout</button>
         <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -125,7 +125,7 @@
             <div class="container mt-5">
                 <div class="row justify-content-center">
                     <div class="col-md-6">
-                        <button id="create-user-button" class="btn btn-primary">Crear Usuario</button>
+                        <button id="create-user-button" class="btn btn-primary btn-create" style="display: none;">Crear Usuario</button>
                     </div>
                 </div>
             </div>
@@ -170,11 +170,12 @@
    
 
     // Función para cargar la lista de usuarios y verificar el token
-    async function checkTokenAndLoadUserList() {
+    function checkTokenAndLoadUserList() {
         const loginContainer = document.querySelector('#login-container');
         const loggedInContent = document.querySelector('.logged-in-content');
-        const btnLogout = document.querySelector('.btn-logout');
-
+        const btnLogout = document.querySelector('.btn-logged');
+        const btnCreate = document.querySelector('.btn-create');
+        
         const userTable = document.querySelector('.user-table tbody');
         
         // Obtener el token de acceso almacenado en localStorage
@@ -194,7 +195,7 @@
                     loginContainer.style.display = 'none';
                     loggedInContent.style.display = 'block';
                     btnLogout.style.display = 'block';
-
+                    btnCreate.style.display = 'block';
                     return response.json();
                 } else {
                     // Token no válido, borrar token y mostrar formulario de inicio de sesión                        
@@ -202,6 +203,7 @@
                     loggedInContent.style.display = 'none';
                     loginContainer.style.display = 'block';
                     btnLogout.style.display = 'none';
+                    btnCreate.style.display = 'none';
                 }
             })
             .then(data => {
@@ -340,6 +342,8 @@
             const accessToken = localStorage.getItem('access_token');
 
             if (accessToken) {
+                const editUserIdInput = document.getElementById('edit-user-id');
+
                 const response = await fetch(`/api/me/${userId}`, {
                     method: 'PATCH',
                     headers: {
@@ -350,7 +354,7 @@
                     body: JSON.stringify({
                         name: editedName,
                         email: editedEmail,
-                        password: editedPassword
+                        password: editedPassword,
                     })
                 });
                 
