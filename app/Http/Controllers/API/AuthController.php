@@ -153,7 +153,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $authenticatedUser->id,
-            'password' => 'sometimes|required|string|min:6', // aplicaría solo si se modifica algún otro campo
+            'password' => 'required|string|min:6',
         ]);
 
         // Obtener el valor del email del request
