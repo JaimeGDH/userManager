@@ -65,6 +65,24 @@
                 </div>
             </div>
         </div>
+        <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ¿Estás seguro de que deseas eliminar este usuario?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger" id="confirm-delete-btn">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <main class="container">
             <div class="container mt-4">
                 <h1 class="display-4">User Manager</h1>
@@ -142,6 +160,7 @@
             })
             .then(data => {
                 // Agregar usuarios a la tabla
+                userTable.innerHTML = '';
                 const users = data;
 
                 data.forEach(user => {
@@ -164,7 +183,10 @@
                     const deleteButton = document.createElement('button');
                     deleteButton.textContent = 'Delete';
                     deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');                        
-
+                    deleteButton.dataset.userId = user.id;
+                    deleteButton.onclick = function() {
+                        openDeleteModal(user.id, users); // Llamar a la función con el ID del usuario
+                    };
                     actionCell.appendChild(editButton);
                     actionCell.appendChild(deleteButton);
                 });
@@ -284,27 +306,22 @@
                         password: editedPassword
                     })
                 });
-            }
+                
+                if (response.ok) {
+                    // Cerrar el modal después de guardar
+                    const editModal = new bootstrap.Modal(document.getElementById('editModal'));                 
+                    editModal.hide(); // No se está cerrando
 
-            if (response.ok) {
-                // Actualizar los datos del usuario en la lista de usuarios
-                user.name = editedName;
-                user.email = editedEmail;
-
-                // Actualizar la tabla con los nuevos datos
-                nameCell.textContent = editedName;
-                emailCell.textContent = editedEmail;
-
-                // Cerrar el modal después de guardar
-                editModal.hide();
-            } else {
-                console.error('Error updating user');
-            }
+                    checkTokenAndLoadUserList();
+                } else {
+                    console.error('Error updating user');
+                }
+            }            
         } catch (error) {
             console.error('An error occurred while updating user', error);
         }
     });
-
+    
     function openEditModal(userId, users) {
         const editModal = new bootstrap.Modal(document.getElementById('editModal'));
 
@@ -334,9 +351,54 @@
         return users.find(user => user.id === userId);
     }
 
-    // deleteButton.addEventListener('click', () => {
+    function openDeleteModal(userId) {
+        const confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
         
-    // });
+        // Mostrar el modal de confirmación
+        confirmDeleteModal.show();
+        
+        // Agregar lógica para el botón de confirmar eliminación
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        confirmDeleteBtn.addEventListener('click', async () => {
+            // Realizar la solicitud DELETE al servidor para eliminar el usuario
+            try {
+                const accessToken = localStorage.getItem('access_token');
+                
+                if (accessToken) {
+                    const response = await fetch(`/api/delete/${userId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        // Cerrar el modal de confirmación
+                        confirmDeleteModal.hide();
+                        
+                        // Actualizar la lista de usuarios
+                        checkTokenAndLoadUserList();
+                    } else {
+                        console.error('Error deleting user');
+                    }
+                }
+            } catch (error) {
+                console.error('An error occurred while deleting user', error);
+            }
+        });
+    }
+
+    // Agregar listeners para los botones de eliminar en cada fila de la tabla
+    const deleteButtons = document.querySelectorAll('.delete-button');
+    deleteButtons.forEach(deleteButton => {
+        deleteButton.addEventListener('click', () => {
+            const userId = deleteButton.dataset.userId;
+            openDeleteModal(userId);
+        });
+    });
+
     </script>
 </body>
 </html>

@@ -117,8 +117,11 @@ class AuthController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        // Verificar la autenticación usando el middleware auth:api
-        if ($user->id !== auth()->user()->id) {
+        // Obtener el usuario autenticado
+        $authenticatedUser = JWTAuth::parseToken()->authenticate();
+
+        // Verificar si el usuario autenticado coincide con el ID proporcionado en la URL
+        if ($authenticatedUser->id != $id) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
