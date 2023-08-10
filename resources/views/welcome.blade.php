@@ -26,6 +26,7 @@
 </head>
 <body>
     <div id="app"> 
+        <button id="logout-button" class="btn btn-secondary btn-logout" style="position: absolute; top: 10px; right: 10px;" style="display: none;">Logout</button>
         <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -91,7 +92,7 @@
                 <div class="row justify-content-center">
                     <div class="col-md-6">
                         <div class="card">
-                            <div id="login-container" class="card-body" style="display: none;">                                
+                            <div id="login-container" class="card-body" style="display: none;">
                                 <form id="login-form">
                                     <div class="mb-3">
                                         <label for="email" class="form-label">Email</label>
@@ -131,6 +132,8 @@
     async function checkTokenAndLoadUserList() {
         const loginContainer = document.querySelector('#login-container');
         const loggedInContent = document.querySelector('.logged-in-content');
+        const btnLogout = document.querySelector('.btn-logout');
+
         const userTable = document.querySelector('.user-table tbody');
         
         // Obtener el token de acceso almacenado en localStorage
@@ -149,6 +152,7 @@
                     // Token válido, mostrar contenido
                     loginContainer.style.display = 'none';
                     loggedInContent.style.display = 'block';
+                    btnLogout.style.display = 'block';
 
                     return response.json();
                 } else {
@@ -156,6 +160,7 @@
                     localStorage.removeItem('access_token');
                     loggedInContent.style.display = 'none';
                     loginContainer.style.display = 'block';
+                    btnLogout.style.display = 'none';
                 }
             })
             .then(data => {
@@ -197,6 +202,7 @@
         } else {
             // No hay token, mostrar formulario de inicio de sesión
             loggedInContent.style.display = 'none';
+            btnLogout.style.display = 'none';
             loginContainer.style.display = 'block';
         }
     }
@@ -288,7 +294,7 @@
         const editedPassword = editPasswordInput.value;
         const userId = editIdInput.value;
 
-        // Realizar la solicitud PUT al servidor para actualizar los datos del usuario
+        // Realizar la solicitud PATCH al servidor para actualizar los datos del usuario
         try {
             const accessToken = localStorage.getItem('access_token');
 
@@ -357,7 +363,6 @@
         // Mostrar el modal de confirmación
         confirmDeleteModal.show();
         
-        // Agregar lógica para el botón de confirmar eliminación
         const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
         confirmDeleteBtn.addEventListener('click', async () => {
             // Realizar la solicitud DELETE al servidor para eliminar el usuario
@@ -399,6 +404,16 @@
         });
     });
 
+    document.addEventListener('DOMContentLoaded', () => {
+        // Agregar evento de clic al botón "Logout"
+        const logoutButton = document.getElementById('logout-button');
+        logoutButton.addEventListener('click', () => {
+            // Eliminar el token de acceso almacenado en localStorage
+            localStorage.removeItem('access_token');
+
+            window.location.href = '/'; 
+        });
+    });
     </script>
 </body>
 </html>
