@@ -27,6 +27,40 @@
 <body>
     <div id="app"> 
         <button id="logout-button" class="btn btn-secondary btn-logout" style="position: absolute; top: 10px; right: 10px;" style="display: none;">Logout</button>
+        <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createModalLabel">Crear Usuario</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="create-form">
+                            <div class="mb-3">
+                                <label for="create-name" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="create-name" name="create-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="create-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="create-email" name="create-email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="create-password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="create-password" name="create-password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="create-password-confirmation" class="form-label">Confirmar Contraseña</label>
+                                <input type="password" class="form-control" id="create-password-confirmation" name="create-password-confirmation" required>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="create-save-btn">Crear Usuario</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -91,6 +125,13 @@
             <div class="container mt-5">
                 <div class="row justify-content-center">
                     <div class="col-md-6">
+                        <button id="create-user-button" class="btn btn-primary">Crear Usuario</button>
+                    </div>
+                </div>
+            </div>
+            <div class="container mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
                         <div class="card">
                             <div id="login-container" class="card-body" style="display: none;">
                                 <form id="login-form">
@@ -122,7 +163,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>            
         </main>        
     </div>
 <script>
@@ -413,6 +454,80 @@
 
             window.location.href = '/'; 
         });
+    });
+
+    const createUserButton = document.getElementById('create-user-button');
+    createUserButton.addEventListener('click', () => {
+        const createModal = new bootstrap.Modal(document.getElementById('createModal'));
+        createModal.show();
+    });
+
+    const createSaveBtn = document.getElementById('create-save-btn');
+    createSaveBtn.addEventListener('click', async () => {        
+        const createForm = document.getElementById('create-form');
+        if (!createForm.checkValidity()) {
+            // Mostrar mensajes de validación en campos inválidos
+            const invalidFields = createForm.querySelectorAll(':invalid');
+            invalidFields.forEach(field => {
+                const fieldName = field.getAttribute('name');
+                const errorDiv = document.getElementById(`create-${fieldName}-error`);
+                if (errorDiv) {
+                    errorDiv.textContent = field.validationMessage;
+                }
+            });
+
+            return;
+        }
+
+        const createNameInput = document.getElementById('create-name');
+        const createEmailInput = document.getElementById('create-email');
+        const createPasswordInput = document.getElementById('create-password');
+        const createPasswordConfirmationInput = document.getElementById('create-password-confirmation');
+
+        const newName = createNameInput.value;
+        const newEmail = createEmailInput.value;
+        const newPassword = createPasswordInput.value;
+        const newPasswordConfirmation = createPasswordConfirmationInput.value;
+
+        if (newPassword !== newPasswordConfirmation) {
+            // Mostrar mensaje de error si las contraseñas no coinciden
+            const errorDiv = document.getElementById('create-password-confirmation-error');
+            if (errorDiv) {
+                errorDiv.textContent = 'Las contraseñas no coinciden.';
+            }
+            return;
+        }
+
+        // Realizar la solicitud POST al servidor para crear un nuevo usuario
+        try {
+            const accessToken = localStorage.getItem('access_token');
+
+            const response = await fetch('/api/new', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: newName,
+                    email: newEmail,
+                    password: newPassword,
+                })
+            });
+
+            if (response.ok) {
+                // Cerrar el modal después de crear el usuario
+                const createModal = new bootstrap.Modal(document.getElementById('createModal'));
+                createModal.hide(); // no se cierra
+
+                checkTokenAndLoadUserList();
+            } else {
+                console.error('Error creating user');
+            }
+        } catch (error) {
+            console.error('An error occurred while creating user', error);
+        }
     });
     </script>
 </body>
